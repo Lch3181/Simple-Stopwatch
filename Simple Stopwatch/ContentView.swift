@@ -133,6 +133,7 @@ class Stopwatch:ObservableObject {
         timer.invalidate()
         mode = .stopped
         timeElapsed = 0.00
+        _lap.removeAll()
     }
 }
 
