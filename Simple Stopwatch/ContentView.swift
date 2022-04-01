@@ -17,16 +17,35 @@ struct ContentView: View {
             
             HStack {
                 Spacer()
-                Button(action: {
-                    stopwatch.reset()
-                }, label: {
-                    Image(systemName: "arrow.clockwise")
-                        .foregroundColor(Color.white)
-                        .frame(width: 50.0, height: 50.0)
-                        .background(/*@START_MENU_TOKEN@*//*@PLACEHOLDER=View@*/Color.gray/*@END_MENU_TOKEN@*/)
-                        .cornerRadius(200.0)
-                    
-                })
+                switch stopwatch.mode {
+                case .stopped:
+                    withAnimation {
+                        Button(action: {
+                            stopwatch.reset()
+                        }, label: {
+                            Image(systemName: "arrow.clockwise")
+                                .foregroundColor(Color.white)
+                                .frame(width: 50.0, height: 50.0)
+                                .background(/*@START_MENU_TOKEN@*//*@PLACEHOLDER=View@*/Color.gray/*@END_MENU_TOKEN@*/)
+                                .cornerRadius(200.0)
+                            
+                        })
+                    }
+                case .running:
+                    withAnimation {
+                        Button(action: {
+                            stopwatch.lap()
+                        }, label: {
+                            Image(systemName: "bookmark.fill")
+                                .foregroundColor(Color.white)
+                                .frame(width: 50.0, height: 50.0)
+                                .background(/*@START_MENU_TOKEN@*//*@PLACEHOLDER=View@*/Color.green/*@END_MENU_TOKEN@*/)
+                                .cornerRadius(200.0)
+                            
+                        })
+                    }
+                }
+                
                 Spacer()
                 switch stopwatch.mode {
                 case .stopped:
@@ -59,6 +78,15 @@ struct ContentView: View {
                     }
                 }
                 Spacer()
+                
+            }
+            List(Array(zip(stopwatch._lap.indices.reversed(), stopwatch._lap.reversed())), id: \.0) { index, lap in
+                HStack {
+                    Text("Lap \(index)")
+                    Spacer()
+                    Text("\(String(format: "%.2f", lap.lap))")
+                        .multilineTextAlignment(.trailing)
+                }
             }
         }
     }
@@ -69,9 +97,19 @@ enum mode {
     case stopped
 }
 
+struct Lap:Identifiable {
+    var id = UUID()
+    var lap = Double()
+    init(_ lap: Double){
+        self.lap = lap
+    }
+}
+
 class Stopwatch:ObservableObject {
     @Published var timeElapsed = 0.00
     @Published var mode:mode = .stopped
+    @Published var _lap = [Lap]()
+
     var timer = Timer()
     
     func start() {
@@ -86,6 +124,11 @@ class Stopwatch:ObservableObject {
         mode = .stopped
     }
     
+    func lap() {
+        let newLap = Lap(self.timeElapsed)
+        _lap.append(newLap)
+    }
+    
     func reset() {
         timer.invalidate()
         mode = .stopped
@@ -97,5 +140,6 @@ struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         ContentView()
             .preferredColorScheme(.dark)
+            
     }
 }
